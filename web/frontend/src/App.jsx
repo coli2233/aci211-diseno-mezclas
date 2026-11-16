@@ -196,25 +196,16 @@ export default function App() {
       {/* -------- portada azul noche (héroe + metodología) -------- */}
       <div className="portada">
       <header className="hero">
-        <p className="hero-eyebrow">Motor de cálculo · ACI 211</p>
-        <h1>Dosificación de concreto <em>en un clic</em></h1>
-        <p>El formulario alimenta al <b>script Python original</b> (sin una línea
-        modificada) a través de la API: es él quien resuelve los <b>15 pasos</b> del
-        método, genera el Excel y devuelve cada valor con un <b>máximo de 3
-        decimales</b>, igual que en la versión de consola.</p>
-        <div className="hero-leyenda">
-          <span className="leyenda"><i className="mota m-cemento" />Cemento</span>
-          <span className="leyenda"><i className="mota m-arena" />Agregado fino</span>
-          <span className="leyenda"><i className="mota m-piedra" />Agregado grueso</span>
-          <span className="leyenda"><i className="mota m-agua" />Agua efectiva</span>
-        </div>
+        <h1>Diseño de mezclas de concreto <em>ACI 211</em></h1>
+        <p>Ingresa tus materiales y obtén la dosificación por m³,
+        con informe Excel al instante.</p>
       </header>
 
       {/* -------- metodología -------- */}
       <div className="metodo">
         <div className="metodo-caja">
           <p className="metodo-titulo">
-            <span className="n">15</span> pasos del método · ejecutados por el script
+            <span className="n">15</span> pasos del método ACI 211
           </p>
           <div className="pasos">
             {METODOLOGIA.map(([n, t]) => (
@@ -325,18 +316,15 @@ export default function App() {
                 <i className="mota m-piedra" /><i className="mota m-agua" />
               </div>
               <h2>Ficha técnica de dosificación</h2>
-              <p>Aún no hay cálculos. Pulsa <b>Calcular dosificación</b>: los campos
-              vacíos equivalen a ENTER en el script, es decir, el valor por defecto
-              del ejemplo «corregido».</p>
-              <span className="llave">⇄ stdin → stdout → JSON · Excel original incluido</span>
+              <p>Aún no hay cálculos. Pulsa <b>Calcular dosificación</b>;
+              los campos vacíos usan los valores por defecto.</p>
             </div>
           )}
 
           {cargando && (
             <div className="vacio">
               <h2>⏳ Ejecutando el diseño…</h2>
-              <p>El script Python está resolviendo los 15 pasos del método ACI 211
-              y generando el informe.</p>
+              <p>Resolviendo los 15 pasos del método y generando el informe Excel.</p>
             </div>
           )}
 
@@ -438,7 +426,7 @@ export default function App() {
                 </a>
               )}
 
-              <Seccion titulo="Datos ingresados · validados por el script"
+              <Seccion titulo="Datos ingresados"
                 chip={<Chip>{Object.keys(resultado.datos).length} campos</Chip>}>
                 <table className="tabla">
                   <tbody>
@@ -450,14 +438,14 @@ export default function App() {
                 </table>
               </Seccion>
 
-              <Seccion titulo="Salida real del script" chip={<Chip>stdout sin alterar</Chip>}>
+              <Seccion titulo="Salida de consola" chip={<Chip>sin alterar</Chip>}>
                 <button className="mini-boton" onClick={() => setVerConsola(!verConsola)}>
                   {verConsola ? "▾ Ocultar consola" : "▸ Mostrar consola"}
                 </button>
                 {verConsola && (
                   <div className="terminal">
                     <div className="terminal-barra">
-                      python diseno_mezclas_aci211.py · proceso hijo de la API
+                      diseno_mezclas_aci211.py · salida original
                     </div>
                     <pre>{resultado.salida}</pre>
                   </div>
