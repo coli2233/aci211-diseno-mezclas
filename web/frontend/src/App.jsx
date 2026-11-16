@@ -186,10 +186,6 @@ export default function App() {
               <small>Diseño de mezclas · ACI 211.1</small>
             </span>
           </div>
-          <span className="nav-estado">
-            <span className="punto" />
-            diseno_mezclas_aci211.py · intacto
-          </span>
         </div>
       </nav>
 
@@ -468,7 +464,7 @@ export default function App() {
           <p className="equipo">
             <b>Equipo 6</b> — Xiomara Nuñez · Aymi Juzarit · José Cunya ·
             Anderson Flores · Luis Espinoza · Christian Llerena<br />
-            Docente: ING. FLAVIO CESAR TRUJILLO BAILON · el script Python no fue modificado
+            Docente: ING. FLAVIO CESAR TRUJILLO BAILON
           </p>
         </div>
       </footer>
