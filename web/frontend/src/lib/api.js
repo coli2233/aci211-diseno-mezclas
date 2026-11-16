@@ -31,8 +31,14 @@ export async function disenar(datos) {
 
   const j = await r.json();
 
-  // el informe Excel llega con ruta relativa a la API: absolutizarla
-  if (j && j.informe && j.informe.url && j.informe.url.startsWith("/")) {
+  // el informe Excel llega de dos formas segun el despliegue:
+  //  - serverless (Vercel): base64 incrustado -> se convierte en data: URL
+  //  - contenedor (local / Railway): ruta relativa -> se absolutiza
+  if (j && j.informe && j.informe.base64) {
+    j.informe.url =
+      "data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64," +
+      j.informe.base64;
+  } else if (j && j.informe && j.informe.url && j.informe.url.startsWith("/")) {
     j.informe.url = BASE + j.informe.url;
   }
   return j;
