@@ -301,12 +301,12 @@ p { max-width: var(--ancho-lectura); }
 .campo { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .campo.ancho { grid-column: 1 / -1; }
 .campo > span {
-  font-size: var(--fs-xs);
+  font-size: var(--fs-sm);
   font-weight: 650;
-  color: var(--ink-2);
+  color: var(--ink);
   display: flex; align-items: baseline; gap: 6px;
 }
-.campo > span em { font-style: normal; font-weight: 500; color: var(--ink-3); }
+.campo > span em { font-style: normal; font-weight: 500; color: var(--ink-2); }
 .campo .ayuda { font-size: var(--fs-xs); color: var(--ink-3); line-height: 1.4; }
 
 .campo input, .campo select {
