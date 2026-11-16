@@ -441,7 +441,7 @@ export default function App() {
                 {verConsola && (
                   <div className="terminal">
                     <div className="terminal-barra">
-                      diseno_mezclas_aci211.py · salida original
+                      Consola del programa
                     </div>
                     <pre>{resultado.salida}</pre>
                   </div>
