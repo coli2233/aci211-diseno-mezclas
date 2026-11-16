@@ -1,0 +1,6 @@
+# Dependencias de la API serverless en Vercel (carpeta api/)
+# El cerebro diseno_mezclas_aci211.py necesita numpy, pandas y openpyxl.
+fastapi
+numpy
+pandas
+openpyxl
