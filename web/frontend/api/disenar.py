@@ -1,21 +1,20 @@
 # -*- coding: utf-8 -*-
-"""API serverless (FastAPI en Vercel) para la web React del diseno ACI 211.
+"""API serverless para VERCEL — POST /api/disenar (Equipo 6).
 
-REGLA DE ORO: diseno_mezclas_aci211.py NO se modifica nunca. Su fuente
-original viaja aqui intacta, codificada en base64 en la constante SRC_B64
-(generada automaticamente a partir del archivo original; verificado por
-hash al crearla). En cada peticion se decodifica, se escribe en un
-directorio temporal unico y se ejecuta en memoria con entrada por teclado
-simulada: las mismas respuestas que la API local le enviaria por stdin
-(ENTER = valores por defecto).
+Lo que hacemos en este archivo:
+  - VERCEL lo empaqueta como una función Python y lo expone en
+    https://aci211-diseno-mezclas.vercel.app/api/disenar (mismo dominio
+    que la web: no hay CORS ni servidores externos).
+  - El cerebro diseno_mezclas_aci211.py NO lo tocamos: viaja incrustado
+    en base64 (SRC_B64, al final) y verificamos su hash al generarlo.
+  - En cada petición lo decodificamos a /tmp, lo ejecutamos en memoria
+    con un teclado simulado (las mismas respuestas que la API local le
+    envía por stdin) y convertimos su salida en JSON.
+  - El Excel que el cerebro genera lo leemos y lo devolvemos en base64;
+    el navegador lo descarga sin que exista ninguna URL pública.
 
-Diferencias con la version de contenedor (web/backend/api.py):
-  - no hay subprocess: el script se ejecuta con exec() y stdout capturado
-  - no hay descargas por URL: el Excel generado se devuelve incrustado en
-    base64 (informe.base64) y el frontend lo convierte en data: URL
-
-Endpoint:
-  POST /api/disenar -> ejecuta el cerebro y devuelve los resultados
+Diferencia con web/backend/api.py (local/contenedor): no usamos
+subprocess ni servimos archivos; todo ocurre dentro de la función.
 """
 import base64
 import builtins
@@ -33,9 +32,10 @@ from fastapi.responses import JSONResponse
 app = FastAPI(title="API ACI 211 (serverless)", version="1.2")
 
 # Con computo fluido pueden llegar peticiones concurrentes a la misma
-# instancia; redirect_stdout es global, asi que se serializa la ejecucion.
+# instancia; redirect_stdout es global, así que serializamos la ejecución.
 _candado = threading.Lock()
 
+# Patrón del informe: diseno_aci211_YYYYMMDD_HHMMSS.xlsx (lo nombra el cerebro)
 PATRON_INFORME = re.compile(r"^diseno_aci211_\d{8}_\d{6}\.xlsx$")
 
 
@@ -48,7 +48,7 @@ def _limpiar(valor, defecto=""):
 
 
 def _construir_entrada(d):
-    """Arma la lista de respuestas que el script espera por teclado."""
+    """Armamos la lista de respuestas que el script espera por teclado."""
     arena = d.get("arena") or {}
     piedra = d.get("piedra") or {}
     probeta = d.get("probeta") or {}
@@ -156,13 +156,14 @@ def _parsear_dosificacion(salida):
 
 
 def _ejecutar_cerebro(d):
-    """Ejecuta el cerebro como si un usuario tecleara.
+    """Ejecutamos el cerebro como si un usuario tecleara.
 
-    Devuelve (salida, informe, error). informe = None si no se genero Excel.
+    Devolvemos (salida, informe, error); informe = None si no hubo Excel.
     """
-    # directorio unico por ejecucion: el cerebro escribe el Excel junto a
-    # su propio archivo (__file__), asi que ahi cae y no se contamina entre
-    # peticiones ni con restos de instancias tibias
+    # Abrimos un directorio único por petición y decodificamos ahí el
+    # cerebro: el script escribe el Excel junto a su propio archivo
+    # (__file__), así que cada informe queda aislado de otros usuarios
+    # y de restos de instancias tibias.
     run_dir = os.path.join("/tmp", "aci211_" + uuid.uuid4().hex)
     os.makedirs(run_dir, exist_ok=True)
     ruta_py = os.path.join(run_dir, "diseno_mezclas_aci211.py")
@@ -174,9 +175,9 @@ def _ejecutar_cerebro(d):
     buf = io.StringIO()
 
     def fake_input(prompt=""):
-        # input() escribe el mensaje en stdout aunque la entrada venga de
-        # una tuberia: replicamos eso para que el texto capturado sea
-        # identico al que produce la API local con subprocess
+        # Simulamos input() idéntico a la tubería de la API local:
+        # escribimos el mensaje en la salida capturada y, si se agotan
+        # las respuestas, lanzamos EOFError (mismo final que en local).
         if prompt:
             buf.write(str(prompt))
         try:
@@ -184,6 +185,8 @@ def _ejecutar_cerebro(d):
         except StopIteration:
             raise EOFError("entrada terminada")
 
+    # Preparamos el entorno de ejecución: __name__=__main__,
+    # __file__ apuntando al temporal y el input real sustituido por el nuestro
     ns = {
         "__name__": "__main__",
         "__file__": ruta_py,
@@ -202,6 +205,8 @@ def _ejecutar_cerebro(d):
             error = type(e).__name__ + ": " + str(e)
     salida = buf.getvalue()
 
+    # Si el resumen existe, buscamos el Excel más reciente, lo leemos
+    # y lo devolvemos incrustado en base64 (Vercel no guarda archivos).
     informe = None
     if error is None and "RESUMEN DE LA DOSIFICACION" in salida:
         candidatos = [n for n in os.listdir(run_dir) if PATRON_INFORME.match(n)]
@@ -217,6 +222,8 @@ def _ejecutar_cerebro(d):
 
 @app.post("/api/disenar")
 def disenar(d: dict):
+    # VERCEL expone esta ruta en el dominio de la web. Ejecutamos el
+    # cerebro y devolvemos datos + dosificación + informe + salida.
     salida, informe, error = _ejecutar_cerebro(d or {})
     if error is not None or "RESUMEN DE LA DOSIFICACION" not in salida:
         return JSONResponse(
@@ -237,8 +244,8 @@ def disenar(d: dict):
 
 
 # ---------------------------------------------------------------------------
-# Fuente original del cerebro (NO editar este bloque: se regenera desde
-# diseno_mezclas_aci211.py, que es el unico archivo con la logica real).
+# Fuente original del cerebro: la generamos desde diseno_mezclas_aci211.py
+# y la verificamos por hash. NO la editamos a mano: se regenera.
 # ---------------------------------------------------------------------------
 SRC_B64 = (
     "aW1wb3J0IG1hdGgKaW1wb3J0IG9zCmltcG9ydCByZQppbXBvcnQgc3lzCmZyb20gZGF0ZXRpbWUgaW1wb3J0IGRhdGV0aW1l"
