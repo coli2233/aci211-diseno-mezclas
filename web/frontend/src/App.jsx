@@ -1,8 +1,17 @@
+/* ============================================================
+   ACI 211 · Tecnología del Concreto — interfaz (Equipo 6)
+   Aquí armamos toda la vista: portada, formulario y ficha técnica.
+   Nosotros NO calculamos nada: cada valor que se pinta sale del
+   script original diseno_mezclas_aci211.py, que la API ejecuta y
+   nos devuelve como JSON. En producción Vercel compila este
+   archivo con Vite y lo publica en el dominio de la web.
+   ============================================================ */
 import React, { useState } from "react";
 import { disenar } from "./lib/api";
 
 /* ============================================================
-   Datos = ejemplo "CORREGIDO" del script (ENTER por defecto)
+   Cargamos el formulario con el ejemplo "CORREGIDO" del script:
+   dejar un campo vacío equivale a ENTER = valor por defecto.
    ============================================================ */
 const DEFAULTS = {
   descripcion: "losa de concreto",
@@ -21,11 +30,13 @@ const DEFAULTS = {
   informe: true,
 };
 
+/* Las 8 opciones de TMN que el script acepta (PASO 3) */
 const TMN_OPCIONES = [
   ["1", '3/8"'], ["2", '1/2"'], ["3", '3/4"'], ["4", '1"'],
   ["5", '1 1/2"'], ["6", '2"'], ["7", '3"'], ["8", '6"'],
 ];
 
+/* Los 15 pasos del método, listos para pintarse como chips en la portada */
 const METODOLOGIA = [
   ["1", "f'cr requerida"], ["2", "Asentamiento"], ["3", "TMN"],
   ["4", "Agua unitaria"], ["5", "Relación a/c"], ["6", "Aire"],
@@ -33,15 +44,20 @@ const METODOLOGIA = [
   ["13", "Proporción en peso"], ["14", "Por saco de cemento"], ["15", "Probetas"],
 ];
 
+/* Formateamos los valores que llegan del script: "—" si falta algo,
+   y num() nos da el número limpio (acepta coma decimal) para el gráfico */
 const fmt = (v) => (v === null || v === undefined || v === "" ? "—" : v);
 const num = (v) => (fmt(v) === "—" ? 0 : parseFloat(String(v).replace(",", ".")) || 0);
 
-/* ============================ piezas ============================ */
+/* ============================ piezas ============================
+   Componentes chiquitos que reutilizamos en toda la vista */
 
 function Chip({ children, viva }) {
   return <span className={"chip" + (viva ? " viva" : "")}>{children}</span>;
 }
 
+/* Bloque numerado del formulario (01–05): cabecera con el PASO del
+   método al que corresponde y cuerpo con sus campos */
 function Grupo({ num, titulo, referencia, children }) {
   return (
     <section className="grupo">
@@ -55,6 +71,8 @@ function Grupo({ num, titulo, referencia, children }) {
   );
 }
 
+/* Los 4 tipos de campo (texto, número, lista, interruptor) comparten
+   el mismo .campo: etiqueta + unidad + control + ayuda opcional */
 function Texto({ etiqueta, unidad, valor, onChange, ayuda, ancho }) {
   return (
     <label className={"campo" + (ancho ? " ancho" : "")}>
@@ -99,6 +117,7 @@ function Interruptor({ etiqueta, valor, onChange }) {
   );
 }
 
+/* Tarjeta de indicador grande para la cabecera de la ficha */
 function Kpi({ etiqueta, valor, unidad, nota, tono }) {
   return (
     <div className={"kpi" + (tono ? " tono-" + tono : "")}>
@@ -109,6 +128,7 @@ function Kpi({ etiqueta, valor, unidad, nota, tono }) {
   );
 }
 
+/* Sección con título de la ficha técnica (tabla, gráfico, consola…) */
 function Seccion({ titulo, chip, tono, children }) {
   return (
     <section className={"seccion" + (tono ? " tono-" + tono : "")}>
@@ -118,6 +138,8 @@ function Seccion({ titulo, chip, tono, children }) {
   );
 }
 
+/* Barras de distribución por m³: dibujamos las proporciones que
+   devolvió el script (cemento, fino, grueso, agua) */
 function GraficoDosis({ D }) {
   const filas = [
     ["Cemento", num(D.cemento), "var(--bar-1)", "kg/m³"],
@@ -145,6 +167,8 @@ function GraficoDosis({ D }) {
 
 /* ============================= app ============================= */
 
+/* ============================ app =============================
+   Aquí vive todo el estado de la página y el flujo de una consulta */
 export default function App() {
   const [datos, setDatos] = useState(DEFAULTS);
   const [resultado, setResultado] = useState(null);
@@ -152,10 +176,15 @@ export default function App() {
   const [error, setError] = useState(null);
   const [verConsola, setVerConsola] = useState(false);
 
+  /* Dos fábricas de manejadores: f() edita una sub-rama (arena,
+     piedra, probeta) y directo() edita una clave suelta del formulario */
   const f = (rama, clave) => (v) =>
     setDatos((d) => ({ ...d, [rama]: { ...d[rama], [clave]: v } }));
   const directo = (clave) => (v) => setDatos((d) => ({ ...d, [clave]: v }));
 
+  /* Al pulsar "Calcular dosificación": enviamos el formulario completo
+     a la API (en producción: la función serverless de Vercel) y con la
+     respuesta pintamos la ficha técnica o el error */
   async function calcular() {
     setCargando(true);
     setError(null);
