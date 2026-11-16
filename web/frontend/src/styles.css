@@ -272,6 +272,7 @@ p { max-width: var(--ancho-lectura); }
 .grupo:hover { box-shadow: var(--e2); }
 .grupo-cab {
   display: flex; align-items: center; gap: var(--s3);
+  flex-wrap: wrap;
   padding: var(--s3) var(--s4);
   border-bottom: 1px solid var(--hair);
   background: var(--sunken);
@@ -282,13 +283,13 @@ p { max-width: var(--ancho-lectura); }
   letter-spacing: 0.08em;
 }
 .grupo-cab h2 {
-  font-size: var(--fs-sm);
+  font-size: var(--fs-md);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--ink);
 }
-.grupo-cab .ref { margin-left: auto; font: 500 var(--fs-xs) var(--mono); color: var(--ink-3); }
+.grupo-cab .ref { margin-left: auto; font: 500 var(--fs-sm) var(--mono); color: var(--ink-3); }
 .grupo-cuerpo {
   display: grid;
   grid-template-columns: 1fr;
