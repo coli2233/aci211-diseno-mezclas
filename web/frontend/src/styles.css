@@ -250,7 +250,7 @@ p { max-width: var(--ancho-lectura); }
 /* ==================== layout principal (Mobile-First) ==================== */
 
 .layout {
-  max-width: 1200px; margin: 0 auto; width: 100%;
+  max-width: 960px; margin: 0 auto; width: 100%;
   padding: var(--s6) clamp(var(--s4), 4vw, var(--s8)) var(--s10);
   display: grid;
   grid-template-columns: 1fr;
@@ -258,10 +258,6 @@ p { max-width: var(--ancho-lectura); }
   align-items: start;
   flex: 1;
 }
-@media (min-width: 1024px) {
-  .layout { grid-template-columns: minmax(0, 420px) 1fr; gap: var(--s8); }
-}
-
 /* ==================== formulario ==================== */
 
 .grupo {
