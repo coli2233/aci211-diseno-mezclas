@@ -1,0 +1,10 @@
+# el frontend de desarrollo no viaja en la imagen de la API
+web/frontend
+# artefactos y cachés
+__pycache__
+*.pyc
+*.xlsx
+*.pdf
+*.ipynb
+.git
+.env
