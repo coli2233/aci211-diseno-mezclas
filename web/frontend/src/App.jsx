@@ -432,7 +432,8 @@ export default function App() {
               </Seccion>
 
               {resultado.informe && (
-                <a className="boton-oscuro" href={resultado.informe.url} download>
+                <a className="boton-oscuro" href={resultado.informe.url}
+                  download={resultado.informe.nombre || "informe-aci211.xlsx"}>
                   ⬇️ Descargar informe Excel · {resultado.informe.nombre}
                 </a>
               )}
