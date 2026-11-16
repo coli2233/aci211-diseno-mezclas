@@ -183,7 +183,7 @@ export default function App() {
             <span className="sello">211</span>
             <span>
               <b>Tecnología del Concreto</b>
-              <small>Diseño de mezclas · ACI 211.1-91 · f'cr ACI 318-19</small>
+              <small>Diseño de mezclas · ACI 211.1</small>
             </span>
           </div>
           <span className="nav-estado">
