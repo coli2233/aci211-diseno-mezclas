@@ -1,10 +1,19 @@
 # -*- coding: utf-8 -*-
-"""API REST (FastAPI) para la web React del diseno de mezclas ACI 211.
+"""API REST (FastAPI) para la web React del diseno de mezclas ACI 211
+(versión LOCAL / contenedor — Equipo 6).
 
-Regla de oro: el programa original diseno_mezclas_aci211.py NO se modifica.
-La API lo ejecuta como proceso hijo, le envia las respuestas por su entrada
-estandar (igual que un usuario tecleando, ENTER = valores por defecto) y
-convierte la salida de consola en JSON para el frontend.
+Lo que hacemos: la API ejecuta diseno_mezclas_aci211.py como proceso
+hijo, le envía las respuestas por su entrada estándar (igual que un
+usuario tecleando, ENTER = valores por defecto) y convierte la salida
+de consola en JSON para el frontend. El cerebro NO lo modificamos.
+
+Dónde corre:
+  - En tu PC: python web/backend/api.py (o web/iniciar_web.bat) y sirve
+    la web compilada en http://127.0.0.1:8000.
+  - En la nube (opcional): la imagen Docker del repo (Railway/Render/Fly)
+    atendiendo solo /api/*; el frontal vive en Vercel.
+  - En producción ACTUAL: no se usa — la función serverless de
+    web/frontend/api/disenar.py hace el mismo trabajo dentro de Vercel.
 
 Endpoints:
   GET  /api/health            -> estado del servicio
@@ -42,7 +51,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-_candado = threading.Lock()
+_candado = threading.Lock()  # serializamos las ejecuciones para que no se pisen
 
 PATRON_INFORME = re.compile(r"^diseno_aci211_\d{8}_\d{6}\.xlsx$")
 
@@ -56,7 +65,7 @@ def _limpiar(valor, defecto=""):
 
 
 def _construir_entrada(d):
-    """Arma la lista de respuestas que el script espera por teclado."""
+    """Armamos la lista de respuestas que el script espera por teclado."""
     arena = d.get("arena") or {}
     piedra = d.get("piedra") or {}
     probeta = d.get("probeta") or {}
@@ -172,12 +181,15 @@ def _parsear_dosificacion(salida):
 
 @app.get("/api/health")
 def salud():
+    # Healthcheck: aquí confirmamos que el cerebro está en su sitio.
     return {"ok": True, "programa": os.path.basename(PROGRAMA),
             "existe": os.path.exists(PROGRAMA)}
 
 
 @app.post("/api/disenar")
 def disenar(d: dict):
+    # Ruta principal: ejecutamos el cerebro con las respuestas del
+    # formulario, detectamos el Excel nuevo que dejo y parseamos su salida.
     if not os.path.exists(PROGRAMA):
         raise HTTPException(500, "No se encontro diseno_mezclas_aci211.py")
 
@@ -221,6 +233,7 @@ def disenar(d: dict):
 
 @app.get("/api/informes/{nombre}")
 def descargar(nombre: str):
+    # Descargamos el Excel que el script dejo en la carpeta del proyecto.
     if not PATRON_INFORME.match(nombre):
         raise HTTPException(400, "Nombre de informe invalido.")
     ruta = os.path.join(CARPETA_PROYECTO, nombre)
@@ -230,7 +243,7 @@ def descargar(nombre: str):
                         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 
-# la app React compilada con Vite (frontend/dist) se sirve al final
+# la app React compilada con Vite (frontend/dist) la servimos al final
 if os.path.isdir(DIST):
     app.mount("/", StaticFiles(directory=DIST, html=True), name="web")
 
