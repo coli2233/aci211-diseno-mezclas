@@ -165,9 +165,7 @@ function GraficoDosis({ D }) {
   );
 }
 
-/* ============================= app ============================= */
-
-/* ============================ app =============================
+/* ============================= app =============================
    Aquí vive todo el estado de la página y el flujo de una consulta */
 export default function App() {
   const [datos, setDatos] = useState(DEFAULTS);
@@ -215,31 +213,35 @@ export default function App() {
               <small>Diseño de mezclas · ACI 211.1</small>
             </span>
           </div>
+          <span className="nav-badge">
+            <span className="punto" />
+            Equipo 6
+          </span>
         </div>
       </nav>
 
       {/* -------- portada azul noche (héroe + metodología) -------- */}
       <div className="portada">
-      <header className="hero">
-        <h1>Diseño de mezclas de concreto <em>ACI 211</em></h1>
-        <p>Ingresa tus materiales y obtén la dosificación por m³,
-        con informe Excel al instante.</p>
-      </header>
+        <header className="hero">
+          <p className="hero-eyebrow">ACI 211.1-91 · Norma internacional</p>
+          <h1>Diseño de mezclas de concreto <em>ACI 211</em></h1>
+          <p>Ingresa tus materiales y obtén la dosificación por m³,
+          con informe Excel al instante.</p>
+        </header>
 
-      {/* -------- metodología -------- */}
-      <div className="metodo">
-        <div className="metodo-caja">
-          <p className="metodo-titulo">
-            <span className="n">15</span> pasos del método ACI 211
-          </p>
-          <div className="pasos">
-            {METODOLOGIA.map(([n, t]) => (
-              <span className="paso" key={n}><b>{n}</b>{t}</span>
-            ))}
+        {/* -------- metodología -------- */}
+        <div className="metodo">
+          <div className="metodo-caja">
+            <p className="metodo-titulo">
+              <span className="n">15</span> pasos del método ACI 211
+            </p>
+            <div className="pasos">
+              {METODOLOGIA.map(([n, t]) => (
+                <span className="paso" key={n}><b>{n}</b>{t}</span>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
-
       </div>
 
       {/* -------- principal -------- */}
@@ -347,14 +349,15 @@ export default function App() {
           )}
 
           {cargando && (
-            <div className="vacio">
-              <h2>⏳ Ejecutando el diseño…</h2>
+            <div className="vacio vacio-loading">
+              <div className="spinner" />
+              <h2>Ejecutando el diseño…</h2>
               <p>Resolviendo los 15 pasos del método y generando el informe Excel.</p>
             </div>
           )}
 
           {D && (
-            <>
+            <div className="resultados-wrapper">
               <div className="ficha-cab">
                 <h2>Ficha técnica de dosificación</h2>
                 <span className="meta">
@@ -476,7 +479,7 @@ export default function App() {
                   </div>
                 )}
               </Seccion>
-            </>
+            </div>
           )}
         </div>
       </main>
@@ -484,17 +487,22 @@ export default function App() {
       {/* -------- pie -------- */}
       <footer className="pie">
         <div className="pie-in">
-          <div className="normas">
-            <span className="norma">ACI 211.1-91 · proporciones</span>
-            <span className="norma">ACI 318-19 · f'cr</span>
-            <span className="norma">ASTM C33 · agregados</span>
-            <span className="norma">ASTM C192/C39 · probetas</span>
+          <div>
+            <div className="normas">
+              <span className="norma">ACI 211.1-91 · proporciones</span>
+              <span className="norma">ACI 318-19 · f'cr</span>
+              <span className="norma">ASTM C33 · agregados</span>
+              <span className="norma">ASTM C192/C39 · probetas</span>
+            </div>
           </div>
-          <p className="equipo">
-            <b>Equipo 6</b> — Xiomara Nuñez · Aymi Juzarit · José Cunya ·
-            Anderson Flores · Luis Espinoza · Christian Llerena<br />
-            Docente: ING. FLAVIO CESAR TRUJILLO BAILON
-          </p>
+          <div>
+            <p className="equipo">
+              <b>Equipo 6</b> — Xiomara Nuñez · Aymi Juzarit · José Cunya ·
+              Anderson Flores · Luis Espinoza · Christian Llerena<br />
+              Docente: ING. FLAVIO CESAR TRUJILLO BAILON
+            </p>
+            <p className="pie-copy">© 2024 Tecnología del Concreto · Universidad</p>
+          </div>
         </div>
       </footer>
     </div>
