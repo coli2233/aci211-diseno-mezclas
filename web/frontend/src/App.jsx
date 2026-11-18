@@ -220,32 +220,56 @@ export default function App() {
         </div>
       </nav>
 
-      {/* -------- portada azul noche (héroe + metodología) -------- */}
+      {/* -------- portada -------- */}
       <div className="portada">
-        <header className="hero">
-          <p className="hero-eyebrow">ACI 211.1-91 · Norma internacional</p>
-          <h1>Diseño de mezclas de concreto <em>ACI 211</em></h1>
-          <p>Ingresa tus materiales y obtén la dosificación por m³,
-          con informe Excel al instante.</p>
-        </header>
+        {/* orbes decorativos animados */}
+        <div className="hero-orbs" aria-hidden="true">
+          <span className="orb orb-1" />
+          <span className="orb orb-2" />
+          <span className="orb orb-3" />
+        </div>
 
-        {/* -------- metodología -------- */}
-        <div className="metodo">
-          <div className="metodo-caja">
-            <p className="metodo-titulo">
-              <span className="n">15</span> pasos del método ACI 211
-            </p>
-            <div className="pasos">
-              {METODOLOGIA.map(([n, t]) => (
-                <span className="paso" key={n}><b>{n}</b>{t}</span>
-              ))}
+        <header className="hero">
+          <div className="hero-content">
+            <div className="hero-main">
+              <h1>
+                <span className="hero-pre">Diseño de mezclas de concreto</span>
+                <span className="hero-accent">ACI 211</span>
+              </h1>
+              <p className="hero-desc">
+                Calcula la dosificación por m³ en segundos.
+                Ingresa tus materiales, ejecuta los <strong>15 pasos</strong> del
+                método y descarga tu informe Excel al instante.
+              </p>
+              <div className="hero-actions">
+                <a href="#formulario" className="hero-cta">
+                  Comenzar diseño
+                  <span className="hero-cta-arrow">↓</span>
+                </a>
+              </div>
+            </div>
+
+            {/* tarjetas flotantes de vidrio */}
+            <div className="hero-cards">
+              <div className="glass-card">
+                <span className="glass-card-num">15</span>
+                <span className="glass-card-label">Pasos del<br/>método</span>
+              </div>
+              <div className="glass-card glass-card--alt">
+                <span className="glass-card-num">4</span>
+                <span className="glass-card-label">Normas<br/>técnicas</span>
+              </div>
+              <div className="glass-card glass-card--accent">
+                <span className="glass-card-num">5</span>
+                <span className="glass-card-label">Hojas +<br/>3 gráficos</span>
+              </div>
             </div>
           </div>
-        </div>
+        </header>
       </div>
 
       {/* -------- principal -------- */}
-      <main className="layout">
+      <main id="formulario" className="layout">
         {/* formulario */}
         <div>
           <Grupo num="01" titulo="Datos de diseño" referencia="PASOS 1–2">
