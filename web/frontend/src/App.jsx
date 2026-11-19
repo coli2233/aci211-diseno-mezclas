@@ -6,8 +6,15 @@
    nos devuelve como JSON. En producción Vercel compila este
    archivo con Vite y lo publica en el dominio de la web.
    ============================================================ */
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { disenar } from "./lib/api";
+import {
+  supabase,
+  supabaseConfigurado,
+  guardarDiseno,
+  listarDisenos,
+  eliminarDiseno,
+} from "./lib/supabaseClient";
 
 /* ============================================================
    Cargamos el formulario con el ejemplo "CORREGIDO" del script:
@@ -174,6 +181,105 @@ export default function App() {
   const [error, setError] = useState(null);
   const [verConsola, setVerConsola] = useState(false);
 
+  /* ---------- Supabase: cuenta e historial "Mis diseños" ---------- */
+  const [sesion, setSesion] = useState(null);
+  const [cuentaAbierta, setCuentaAbierta] = useState(false);
+  const [modoAuth, setModoAuth] = useState("login"); // "login" | "registro"
+  const [email, setEmail] = useState("");
+  const [pass, setPass] = useState("");
+  const [authError, setAuthError] = useState(null);
+  const [authMsg, setAuthMsg] = useState(null);
+  const [guardando, setGuardando] = useState(false);
+  const [guardado, setGuardado] = useState(null); // "ok" o mensaje de error
+  const [misDisenos, setMisDisenos] = useState([]);
+  const [verMisDisenos, setVerMisDisenos] = useState(false);
+  const [cargandoLista, setCargandoLista] = useState(false);
+
+  /* Al abrir la página recuperamos la sesión guardada en el navegador
+     y nos suscribimos a los cambios de Supabase Auth */
+  useEffect(() => {
+    if (!supabase) return;
+    supabase.auth.getSession().then(({ data }) => setSesion(data.session));
+    const { data: sub } = supabase.auth.onAuthStateChange((_evento, s) => setSesion(s));
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  function abrirCuenta() {
+    setCuentaAbierta(true);
+    setAuthError(null);
+    setAuthMsg(null);
+  }
+
+  /* Registro o inicio de sesión con Supabase Auth */
+  async function entrar() {
+    setAuthError(null);
+    setAuthMsg(null);
+    const credenciales = { email: email.trim(), password: pass };
+    const { error } =
+      modoAuth === "login"
+        ? await supabase.auth.signInWithPassword(credenciales)
+        : await supabase.auth.signUp(credenciales);
+    if (error) {
+      setAuthError(error.message);
+    } else if (modoAuth === "registro") {
+      setAuthMsg("Cuenta creada. Si te pide confirmar el correo, revisa tu bandeja; luego inicia sesión.");
+    } else {
+      setCuentaAbierta(false);
+      setPass("");
+    }
+  }
+
+  async function salir() {
+    await supabase.auth.signOut();
+    setSesion(null);
+    setMisDisenos([]);
+    setVerMisDisenos(false);
+  }
+
+  /* Guardamos la ficha actual en Supabase (botón "Guardar diseño") */
+  async function guardar() {
+    setGuardando(true);
+    setGuardado(null);
+    try {
+      await guardarDiseno(datos, resultado);
+      setGuardado("ok");
+      cargarMisDisenos();
+    } catch (e) {
+      setGuardado(e.message || "error desconocido");
+    }
+    setGuardando(false);
+  }
+
+  async function cargarMisDisenos() {
+    setCargandoLista(true);
+    try {
+      setMisDisenos(await listarDisenos());
+    } catch (e) {
+      setMisDisenos([]);
+    }
+    setCargandoLista(false);
+  }
+
+  function abrirMisDisenos() {
+    setVerMisDisenos(true);
+    cargarMisDisenos();
+  }
+
+  /* Cargamos un diseño guardado de vuelta en el formulario */
+  function cargarDiseno(d) {
+    if (d.datos_entrada) setDatos(d.datos_entrada);
+    setVerMisDisenos(false);
+  }
+
+  async function borrarDiseno(id) {
+    try {
+      await eliminarDiseno(id);
+      setMisDisenos((lista) => lista.filter((d) => d.id !== id));
+    } catch (e) {
+      setGuardado(e.message || "no se pudo eliminar");
+    }
+  }
+
   /* Dos fábricas de manejadores: f() edita una sub-rama (arena,
      piedra, probeta) y directo() edita una clave suelta del formulario */
   const f = (rama, clave) => (v) =>
@@ -217,6 +323,25 @@ export default function App() {
             <span className="punto" />
             Equipo 6
           </span>
+          {supabaseConfigurado && (
+            <div className="nav-cuenta">
+              {sesion ? (
+                <>
+                  <button className="nav-boton" onClick={abrirMisDisenos}>
+                    Mis diseños
+                  </button>
+                  <span className="nav-email" title={sesion.user.email}>
+                    {sesion.user.email}
+                  </span>
+                  <button className="nav-boton" onClick={salir}>Salir</button>
+                </>
+              ) : (
+                <button className="nav-boton" onClick={abrirCuenta}>
+                  Iniciar sesión
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </nav>
 
@@ -478,6 +603,27 @@ export default function App() {
                 </a>
               )}
 
+              {/* Guardado en Supabase ("Mis diseños") */}
+              {supabaseConfigurado && (
+                sesion ? (
+                  <button className="boton-guardar" onClick={guardar} disabled={guardando}>
+                    💾 {guardando ? "Guardando…" : "Guardar diseño"}
+                  </button>
+                ) : (
+                  <p className="aviso-cuenta">
+                    ¿Quieres conservar este diseño?{" "}
+                    <button className="enlace" onClick={abrirCuenta}>Inicia sesión</button>{" "}
+                    y quedará en tu historial.
+                  </p>
+                )
+              )}
+              {guardado === "ok" && (
+                <p className="guardado-ok">✓ Guardado en "Mis diseños" (Supabase)</p>
+              )}
+              {guardado && guardado !== "ok" && (
+                <p className="guardado-error">No se pudo guardar: {guardado}</p>
+              )}
+
               <Seccion titulo="Datos ingresados"
                 chip={<Chip>{Object.keys(resultado.datos).length} campos</Chip>}>
                 <table className="tabla">
@@ -507,6 +653,82 @@ export default function App() {
           )}
         </div>
       </main>
+
+      {/* -------- modal de cuenta (Supabase Auth) -------- */}
+      {cuentaAbierta && (
+        <div className="modal-fondo" onClick={() => setCuentaAbierta(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-cab">
+              <h3>{modoAuth === "login" ? "Iniciar sesión" : "Crear cuenta"}</h3>
+              <button className="modal-x" onClick={() => setCuentaAbierta(false)}>×</button>
+            </div>
+            <p className="modal-sub">
+              Tu historial se guarda en Supabase; cada cuenta ve solo sus diseños.
+            </p>
+            <label className="campo">
+              <span>Correo electrónico</span>
+              <input type="email" value={email} autoComplete="email"
+                onChange={(e) => setEmail(e.target.value)} />
+            </label>
+            <label className="campo">
+              <span>Contraseña</span>
+              <input type="password" value={pass}
+                autoComplete={modoAuth === "login" ? "current-password" : "new-password"}
+                onChange={(e) => setPass(e.target.value)} />
+            </label>
+            {authError && <p className="error" style={{ margin: 0 }}>⚠️ {authError}</p>}
+            {authMsg && <p className="guardado-ok" style={{ margin: 0 }}>{authMsg}</p>}
+            <button className="boton modal-boton" onClick={entrar}>
+              {modoAuth === "login" ? "Entrar" : "Registrarme"}
+            </button>
+            <button className="enlace modal-cambio"
+              onClick={() => {
+                setModoAuth(modoAuth === "login" ? "registro" : "login");
+                setAuthError(null);
+                setAuthMsg(null);
+              }}>
+              {modoAuth === "login" ? "¿No tienes cuenta? Crear una" : "¿Ya tienes cuenta? Iniciar sesión"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* -------- modal "Mis diseños" (historial en Supabase) -------- */}
+      {verMisDisenos && (
+        <div className="modal-fondo" onClick={() => setVerMisDisenos(false)}>
+          <div className="modal modal-ancho" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-cab">
+              <h3>Mis diseños</h3>
+              <button className="modal-x" onClick={() => setVerMisDisenos(false)}>×</button>
+            </div>
+            {cargandoLista ? (
+              <p className="modal-sub">Cargando…</p>
+            ) : misDisenos.length === 0 ? (
+              <p className="modal-sub">
+                Aún no has guardado diseños. Calcula uno y pulsa "Guardar diseño".
+              </p>
+            ) : (
+              <div className="lista-disenos">
+                {misDisenos.map((d) => (
+                  <div className="diseno-item" key={d.id}>
+                    <div className="diseno-info">
+                      <b>{d.descripcion || "Sin descripción"}</b>
+                      <span>
+                        {new Date(d.creado_en).toLocaleString("es-PE")} · f'c {d.fc ?? "—"} kg/cm²
+                        {d.dosificacion?.fcr ? " · f'cr " + d.dosificacion.fcr : ""}
+                      </span>
+                    </div>
+                    <div className="diseno-acciones">
+                      <button className="mini-boton" onClick={() => cargarDiseno(d)}>Cargar</button>
+                      <button className="mini-boton peligro" onClick={() => borrarDiseno(d.id)}>Eliminar</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* -------- pie -------- */}
       <footer className="pie">
