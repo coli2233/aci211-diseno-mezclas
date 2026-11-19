@@ -5,10 +5,9 @@
    Vercel inyecta VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY en el
    build (las creamos en Vercel → Settings → Environment Variables),
    así que el cliente se configura solo en producción.
-   Con él haremos: iniciar sesión (Supabase Auth) y guardar cada
-   diseño en la tabla public.disenos que vive en Supabase, protegida
-   con RLS (cada usuario solo toca lo suyo).
-   Mientras la UI no lo importe, el bundler lo excluye (tree-shaking).
+   Con él hacemos: iniciar sesión (Supabase Auth), guardar cada
+   diseño en la tabla public.disenos y listar/borrar el historial
+   "Mis diseños"; todo protegido con RLS (cada usuario toca lo suyo).
    ============================================================ */
 
 import { createClient } from "@supabase/supabase-js";
@@ -28,18 +27,28 @@ export const supabase = supabaseConfigurado
     })
   : null;
 
+/* Pedimos el usuario de la sesión actual (lo usa el INSERT para
+   cumplir la columna usuario_id y la política RLS) */
+async function usuarioActual() {
+  const { data } = await supabase.auth.getUser();
+  if (!data?.user) throw new Error("Inicia sesión para continuar.");
+  return data.user;
+}
+
 /**
  * Guardamos un diseño en la tabla public.disenos de Supabase.
- * RLS hace el trabajo de seguridad: usuario_id lo rellena auth.uid(),
+ * RLS hace el trabajo de seguridad: usuario_id debe ser auth.uid(),
  * de modo que solo puede guardar quien tenga sesión iniciada y cada
  * fila solo la ve su dueño.
  */
 export async function guardarDiseno(datos, resultado) {
   if (!supabase) throw new Error("Supabase no está configurado (revisa VITE_SUPABASE_*).");
+  const user = await usuarioActual();
 
   /* Armamos la fila con lo esencial: qué pedimos, qué devolvió el
      script, el nombre del Excel y la salida de consola completa. */
   const fila = {
+    usuario_id: user.id,
     descripcion: datos?.descripcion ?? null,
     fc: datos?.fc ?? null,
     datos_entrada: datos,
@@ -57,4 +66,30 @@ export async function guardarDiseno(datos, resultado) {
 
   if (error) throw error;
   return data;
+}
+
+/**
+ * Listamos los diseños del usuario (los más recientes primero).
+ * No hace falta filtrar por usuario: la política RLS "dueno_lee"
+ * ya limita el SELECT a las filas propias.
+ */
+export async function listarDisenos() {
+  if (!supabase) throw new Error("Supabase no está configurado (revisa VITE_SUPABASE_*).");
+
+  const { data, error } = await supabase
+    .from("disenos")
+    .select("id, descripcion, fc, datos_entrada, dosificacion, informe_nombre, creado_en")
+    .order("creado_en", { ascending: false })
+    .limit(50);
+
+  if (error) throw error;
+  return data ?? [];
+}
+
+/* Borramos un diseño propio (RLS "dueno_borra" impide tocar ajenos) */
+export async function eliminarDiseno(id) {
+  if (!supabase) throw new Error("Supabase no está configurado (revisa VITE_SUPABASE_*).");
+
+  const { error } = await supabase.from("disenos").delete().eq("id", id);
+  if (error) throw error;
 }
