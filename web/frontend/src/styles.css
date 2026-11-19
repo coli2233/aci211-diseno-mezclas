@@ -1262,6 +1262,221 @@ img { display: block; max-width: 100%; }
   margin-top: var(--s1);
 }
 
+/* ==================== cuenta · Supabase Auth ==================== */
+
+.nav-cuenta {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  margin-left: var(--s2);
+}
+
+.nav-boton {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e2e8f0;
+  font: 600 var(--fs-2xs) var(--sans);
+  padding: 7px 14px;
+  border-radius: var(--r-full);
+  cursor: pointer;
+  transition: all var(--dur) var(--ease);
+  white-space: nowrap;
+}
+.nav-boton:hover {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #fff;
+}
+
+.nav-email {
+  font: 500 var(--fs-2xs) var(--mono);
+  color: rgba(148, 163, 184, 0.85);
+  max-width: 170px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (max-width: 760px) {
+  .nav-email { display: none; }
+}
+@media (max-width: 560px) {
+  .nav-badge { display: none; }
+  .nav-cuenta { margin-left: auto; }
+}
+
+/* botón "Guardar diseño" en la ficha */
+.boton-guardar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s2);
+  min-height: 48px;
+  width: 100%;
+  margin-top: var(--s3);
+  border: 1.5px solid rgba(245, 158, 11, 0.35);
+  border-radius: var(--r-md);
+  background: rgba(245, 158, 11, 0.08);
+  color: var(--accent-strong);
+  font: 650 var(--fs-sm) var(--sans);
+  cursor: pointer;
+  transition: all var(--dur) var(--ease);
+}
+.boton-guardar:hover {
+  background: rgba(245, 158, 11, 0.16);
+  border-color: rgba(245, 158, 11, 0.5);
+  transform: translateY(-1px);
+}
+.boton-guardar:disabled { opacity: 0.65; cursor: progress; transform: none; }
+
+.aviso-cuenta {
+  margin-top: var(--s3);
+  font-size: var(--fs-xs);
+  color: var(--ink-3);
+  text-align: center;
+}
+
+.enlace {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--accent-strong);
+  font: 600 var(--fs-xs) var(--sans);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.enlace:hover { color: #b45309; }
+
+.guardado-ok {
+  margin-top: var(--s3);
+  border-radius: var(--r-md);
+  border: 1px solid rgba(5, 150, 105, 0.2);
+  border-left: 4px solid var(--ok);
+  background: var(--ok-soft);
+  color: #065f46;
+  padding: var(--s3) var(--s4);
+  font-size: var(--fs-sm);
+}
+.guardado-error {
+  margin-top: var(--s3);
+  border-radius: var(--r-md);
+  border: 1px solid rgba(220, 38, 38, 0.15);
+  border-left: 4px solid var(--err);
+  background: var(--err-soft);
+  color: #991b1b;
+  padding: var(--s3) var(--s4);
+  font-size: var(--fs-sm);
+}
+
+/* ==================== modales ==================== */
+
+.modal-fondo {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: grid;
+  place-items: center;
+  padding: var(--s4);
+  animation: fade-in 0.2s var(--ease);
+}
+
+.modal {
+  width: 100%;
+  max-width: 420px;
+  max-height: 85vh;
+  overflow: auto;
+  background: var(--surface);
+  border-radius: var(--r-xl);
+  border: 1px solid var(--hair);
+  box-shadow: var(--e4);
+  padding: var(--s6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s4);
+  animation: slide-in-up 0.25s var(--ease);
+}
+.modal-ancho { max-width: 620px; }
+
+.modal-cab {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+}
+.modal-cab h3 {
+  font-size: var(--fs-lg);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.modal-x {
+  width: 34px; height: 34px;
+  border: 0;
+  border-radius: var(--r-full);
+  background: var(--sunken);
+  color: var(--ink-2);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  transition: all var(--dur) var(--ease);
+  flex: none;
+}
+.modal-x:hover { background: var(--err-soft); color: var(--err); }
+
+.modal-sub {
+  font-size: var(--fs-xs);
+  color: var(--ink-3);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.modal-boton { width: 100%; margin-top: var(--s2); }
+.modal-cambio { align-self: center; }
+
+/* ==================== lista "Mis diseños" ==================== */
+
+.lista-disenos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+.diseno-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  flex-wrap: wrap;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-md);
+  background: var(--sunken);
+  padding: var(--s3) var(--s4);
+  transition: all var(--dur) var(--ease);
+}
+.diseno-item:hover { border-color: var(--hair-3); background: var(--surface); }
+
+.diseno-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.diseno-info b {
+  font-size: var(--fs-sm);
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 340px;
+}
+.diseno-info span {
+  font: 500 var(--fs-2xs) var(--mono);
+  color: var(--ink-3);
+}
+
+.diseno-acciones { display: flex; gap: var(--s2); flex: none; }
+.mini-boton.peligro { color: var(--err); border-color: rgba(220, 38, 38, 0.25); }
+.mini-boton.peligro:hover { background: var(--err-soft); border-color: rgba(220, 38, 38, 0.4); }
+
 /* ==================== impresión ==================== */
 
 @media print {
