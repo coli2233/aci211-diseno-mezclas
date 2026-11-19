@@ -205,6 +205,10 @@ export default function App() {
   }, []);
 
   function abrirCuenta() {
+    /* Cada vez que abrimos el panel empezamos en "Iniciar sesión":
+       si el usuario había cambiado a "Crear cuenta" y cerró la ventana,
+       no queremos que el modo de registro se quede pegado. */
+    setModoAuth("login");
     setCuentaAbierta(true);
     setAuthError(null);
     setAuthMsg(null);
