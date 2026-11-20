@@ -15,10 +15,20 @@ const BASE = import.meta.env.VITE_API_URL || "";
    diseno_mezclas_aci211.py del lado del servidor. */
 export async function disenar(datos) {
   let r;
+  const headers = { "Content-Type": "application/json" };
+  try {
+    // Leemos el token de la sesión guardada por Supabase en localStorage
+    const key = Object.keys(localStorage).find((k) => k.includes("-auth-token"));
+    if (key) {
+      const parsed = JSON.parse(localStorage.getItem(key) || "{}");
+      const tok = parsed?.access_token || parsed?.currentSession?.access_token;
+      if (tok) headers["Authorization"] = `Bearer ${tok}`;
+    }
+  } catch { /* sin sesión: el backend guarda en carpeta "anon" */ }
   try {
     r = await fetch(BASE + "/api/disenar", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify(datos),
     });
   } catch {

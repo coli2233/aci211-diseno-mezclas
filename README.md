@@ -76,19 +76,22 @@ flowchart LR
 
 ## Despliegue
 
-### 1. Supabase — base de datos y autenticación
+### 1. Supabase — base de datos, autenticación y Storage
 
-1. Ejecutar `web/supabase/schema.sql` en el **SQL Editor**.
+1. Ejecutar `web/supabase/schema.sql` en el **SQL Editor** (crea la tabla `disenos`, RLS y el bucket `informes-aci211`).
 2. Activar Auth por email/contraseña.
 3. La clave **publishable** puede viajar al navegador; la protección real está en las políticas **RLS**.
+4. **Storage:** el bucket `informes-aci211` es público (lectura sin auth); el backend sube los Excel con la service role key.
 
 ### 2. Render — backend Python
 
 1. **New → Web Service** → repo `coli2233/aci211-diseno-mezclas`.
 2. Runtime **Docker** (usa el `Dockerfile` de la raíz), plan **Free**, región **Virginia**.
 3. **Health Check Path:** `/api/health`.
-4. Variable de entorno:
+4. Variables de entorno:
    - `CORS_ORIGINS=https://aci211-diseno-mezclas.vercel.app`
+   - `SUPABASE_URL=https://uiudnidegokdnnisjpho.supabase.co`
+   - `SUPABASE_SERVICE_ROLE_KEY=<service role key>` (secreta)
 5. Render inyecta `PORT`; el `Dockerfile` lo respeta.
 6. URL resultante: `https://aci211-diseno-mezclas.onrender.com`.
 
@@ -148,7 +151,7 @@ curl -X POST https://aci211-diseno-mezclas.onrender.com/api/disenar \
 ## Notas y limitaciones
 
 - **Cold start:** el plan free de Render duerme tras 15 minutos sin tráfico; la primera petición puede tardar ~50 s.
-- **Excel efímero:** el archivo se guarda en el disco del contenedor y se pierde al reiniciar. Para persistencia, subirlo a **Supabase Storage**.
+- **Persistencia de informes:** si `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` están configurados, el Excel se sube a **Supabase Storage** (`informes-aci211`) y se devuelve una URL permanente. Si no, se usa el endpoint efímero `/api/informes/{nombre}` (desarrollo local).
 - **Previews de Vercel:** `CORS_ORIGINS` solo permite el dominio de producción; las URLs de preview quedan bloqueadas.
 - La función `web/frontend/api/disenar.py` se conserva como respaldo serverless, pero producción usa Render vía `VITE_API_URL`.
 - **Regla de oro:** `diseno_mezclas_aci211.py` no se modifica.

@@ -27,8 +27,9 @@ import re
 import subprocess
 import sys
 import threading
+import urllib.request
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel, ConfigDict, ValidationError, field_validator
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
@@ -252,9 +253,91 @@ def salud():
             "existe": os.path.exists(PROGRAMA)}
 
 
+# ---------------------------------------------------------------------------
+# Persistencia del informe en Supabase Storage (opcional).
+# Si SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY estan configurados, el Excel
+# se sube al bucket "informes-aci211" y se devuelve una URL permanente.
+# Si no, se usa el endpoint efimero /api/informes/{nombre} (comportamiento
+# anterior, util en desarrollo local).
+# ---------------------------------------------------------------------------
+def _env(name):
+    return (os.environ.get(name) or "").strip()
+
+
+def _supabase_url():
+    return _env("SUPABASE_URL") or _env("VITE_SUPABASE_URL")
+
+
+def _service_key():
+    return _env("SUPABASE_SERVICE_ROLE_KEY")
+
+
+def _anon_key():
+    return _env("VITE_SUPABASE_ANON_KEY") or _env("SUPABASE_ANON_KEY")
+
+
+def _usuario_id_desde_token(request):
+    """Devuelve el user_id de Supabase si hay un Bearer token valido, o None."""
+    auth = request.headers.get("authorization") or ""
+    if not auth.lower().startswith("bearer "):
+        return None
+    token = auth.split(" ", 1)[1].strip()
+    url = _supabase_url()
+    anon = _anon_key()
+    if not url or not anon or not token:
+        return None
+    try:
+        req = urllib.request.Request(f"{url}/auth/v1/user", headers={
+            "Authorization": f"Bearer {token}",
+            "apikey": anon,
+        })
+        with urllib.request.urlopen(req, timeout=10) as r:
+            data = json.loads(r.read().decode("utf-8"))
+            return data.get("id")
+    except Exception:
+        return None
+
+
+def _subir_informe_supabase(nombre, ruta_archivo, user_id):
+    """Sube el Excel a Supabase Storage y devuelve la URL publica.
+
+    Devuelve None si no esta configurado o si falla (fallback al endpoint local).
+    """
+    url = _supabase_url()
+    key = _service_key()
+    if not url or not key or not os.path.exists(ruta_archivo):
+        return None
+    carpeta = user_id or "anon"
+    path = f"{carpeta}/{nombre}"
+    bucket = "informes-aci211"
+    try:
+        with open(ruta_archivo, "rb") as f:
+            data = f.read()
+        req = urllib.request.Request(
+            f"{url}/storage/v1/object/{bucket}/{path}",
+            data=data,
+            method="POST",
+        )
+        req.add_header("Authorization", f"Bearer {key}")
+        req.add_header("apikey", key)
+        req.add_header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        req.add_header("x-upsert", "true")
+        with urllib.request.urlopen(req, timeout=60) as r:
+            r.read()
+        # El bucket es publico: la URL no caduca.
+        return f"{url}/storage/v1/object/public/{bucket}/{path}"
+    except Exception:
+        return None
+
+
 @app.post("/api/disenar")
-def disenar(d: dict):
+def disenar(d: dict, request: Request):
     # Validamos la entrada antes de gastar CPU del contenedor.
+    try:
+        DisenoRequest.model_validate(d or {})
+    except ValidationError as e:
+        detalle = [{"loc": err.get("loc"), "msg": err.get("msg"), "type": err.get("type")} for err in e.errors()]
+        raise HTTPException(status_code=422, detail=detalle)
     try:
         DisenoRequest.model_validate(d or {})
     except ValidationError as e:
@@ -296,12 +379,23 @@ def disenar(d: dict):
                    if PATRON_INFORME.match(n)))
     informe = _buscar_informe(antes, despues)
 
+    # Persistimos el informe en Supabase Storage si esta configurado;
+    # si no, usamos el endpoint efimero /api/informes/{nombre}.
+    informe_obj = None
+    if informe:
+        ruta_informe = os.path.join(CARPETA_PROYECTO, informe)
+        user_id = _usuario_id_desde_token(request)
+        url_storage = _subir_informe_supabase(informe, ruta_informe, user_id)
+        if url_storage:
+            informe_obj = {"nombre": informe, "url": url_storage}
+        else:
+            informe_obj = {"nombre": informe, "url": "/api/informes/" + informe}
+
     return {
         "ok": True,
         "datos": _parsear_datos(salida),
         "dosificacion": _parsear_dosificacion(salida),
-        "informe": ({"nombre": informe,
-                     "url": "/api/informes/" + informe} if informe else None),
+        "informe": informe_obj,
         "salida": salida,
     }
 

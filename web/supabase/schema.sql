@@ -48,6 +48,29 @@ create policy "dueno_borra_sus_disenos" on public.disenos
 
 -- Nota: anon NO tiene ninguna política -> sin sesión no se puede leer ni escribir.
 
+-- ============================================================
+-- 4) Supabase Storage: bucket para los informes Excel (Equipo 6)
+--    El backend (Render) sube aquí el .xlsx generado y devuelve una
+--    URL permanente; así el enlace sobrevive a los reinicios del
+--    contenedor. El bucket es público (lectura sin auth); la escritura
+--    la hace el backend con la service role key.
+-- ============================================================
+
+insert into storage.buckets (id, name, public)
+  values ('informes-aci211', 'informes-aci211', true)
+  on conflict (id) do nothing;
+
+-- (Opcional) Si el bucket fuera privado, descomentar estas políticas:
+--
+-- create policy "dueno_lee_sus_informes" on storage.objects
+--   for select using (
+--     bucket_id = 'informes-aci211'
+--     and (storage.foldername(name))[1] = auth.uid()::text
+--   );
+--
+-- create policy "service_role_sube_informes" on storage.objects
+--   for insert with check (bucket_id = 'informes-aci211');
+
 -- 3) (Opcional) bucket para archivar los Excel generados por la API
 --    Si luego queremos subir el .xlsx a Supabase Storage, descomentamos:
 --
