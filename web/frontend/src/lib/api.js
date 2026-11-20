@@ -42,6 +42,12 @@ export async function disenar(datos) {
     try {
       const j = await r.json();
       if (j && j.detalle) detalle = j.detalle;
+      else if (Array.isArray(j && j.detail)) {
+        // Errores de validación (pydantic) -> mensaje legible
+        detalle = j.detail.map((e) => (e.loc || []).join(".") + ": " + (e.msg || "")).join("; ");
+      } else if (j && j.detail) {
+        detalle = typeof j.detail === "string" ? j.detail : JSON.stringify(j.detail);
+      }
     } catch { /* cuerpo no JSON */ }
     const e = new Error(detalle);
     e.status = r.status;

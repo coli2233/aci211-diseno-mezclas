@@ -310,9 +310,13 @@ export default function App() {
       if (!j.ok) setError(j.detalle || "El script no devolvió resultados.");
       else setResultado(j);
     } catch (e) {
-      setError("No se pudo contactar la API" +
-        (e && e.message ? " · " + e.message : "") +
-        ". En local corre backend/api.py (iniciar_web.bat); en producción revisa VITE_API_URL.");
+      if (e && e.status === 422) {
+        setError("Datos inválidos: " + (e.message || "revisa los campos del formulario."));
+      } else {
+        setError("No se pudo contactar la API" +
+          (e && e.message ? " · " + e.message : "") +
+          ". En local corre backend/api.py (iniciar_web.bat); en producción revisa VITE_API_URL.");
+      }
     }
     setCargando(false);
   }

@@ -48,6 +48,27 @@ class _Agregado(BaseModel):
     absorcion: float | None = None
     mf: float | None = None
 
+    @field_validator("puss", "pucs", "pe", mode="before")
+    @classmethod
+    def _vacio_a_none(cls, v):
+        if v == "" or v is None:
+            return None
+        return v
+
+    @field_validator("puss", "pucs", mode="after")
+    @classmethod
+    def _min_positivo(cls, v):
+        if v is not None and v <= 0:
+            raise ValueError("debe ser mayor que 0")
+        return v
+
+    @field_validator("humedad", "absorcion", mode="after")
+    @classmethod
+    def _min_cero(cls, v):
+        if v is not None and v < 0:
+            raise ValueError("no puede ser negativo")
+        return v
+
 
 class _Probeta(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -55,6 +76,34 @@ class _Probeta(BaseModel):
     altura: float | None = None
     numero: int | None = None
     desperdicio: float | None = None
+
+    @field_validator("diametro", "altura", "numero", "desperdicio", mode="before")
+    @classmethod
+    def _vacio_a_none(cls, v):
+        if v == "" or v is None:
+            return None
+        return v
+
+    @field_validator("diametro", "altura", mode="after")
+    @classmethod
+    def _min_dim(cls, v):
+        if v is not None and v <= 0:
+            raise ValueError("debe ser mayor que 0")
+        return v
+
+    @field_validator("numero", mode="after")
+    @classmethod
+    def _min_num(cls, v):
+        if v is not None and v < 1:
+            raise ValueError("debe ser al menos 1")
+        return v
+
+    @field_validator("desperdicio", mode="after")
+    @classmethod
+    def _min_desp(cls, v):
+        if v is not None and v < 0:
+            raise ValueError("no puede ser negativo")
+        return v
 
 
 class DisenoRequest(BaseModel):
@@ -74,17 +123,44 @@ class DisenoRequest(BaseModel):
     confirmar: bool = True
     informe: bool = True
 
-    @field_validator("fc", "pe_cemento")
+    @field_validator("fc", "pe_cemento", mode="before")
+    @classmethod
+    def _vacio_a_none_top(cls, v):
+        if v == "" or v is None:
+            return None
+        return v
+
+    @field_validator("fc", "pe_cemento", mode="after")
     @classmethod
     def _positivo(cls, v):
         if v is not None and v <= 0:
             raise ValueError("debe ser mayor que 0")
         return v
 
+    @field_validator("consistencia", mode="before")
+    @classmethod
+    def _consist(cls, v):
+        if v == "" or v is None:
+            return "2"
+        v = str(v).strip()
+        if v not in ("1", "2", "3"):
+            raise ValueError("debe ser 1, 2 o 3")
+        return v
+
+    @field_validator("tmn", mode="before")
+    @classmethod
+    def _tmn(cls, v):
+        if v == "" or v is None:
+            return "3"
+        v = str(v).strip()
+        if v not in ("1", "2", "3", "4", "5", "6", "7", "8"):
+            raise ValueError("debe ser del 1 al 8")
+        return v
+
     @field_validator("arena", "piedra", mode="before")
     @classmethod
     def _agregado_dict(cls, v):
-        if v is None:
+        if v is None or v == "":
             return _Agregado()
         if isinstance(v, dict):
             return v
@@ -93,7 +169,7 @@ class DisenoRequest(BaseModel):
     @field_validator("probeta", mode="before")
     @classmethod
     def _probeta_dict(cls, v):
-        if v is None:
+        if v is None or v == "":
             return _Probeta()
         if isinstance(v, dict):
             return v
