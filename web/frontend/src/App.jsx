@@ -191,8 +191,17 @@ export default function App() {
   const [authMsg, setAuthMsg] = useState(null);
   const [guardando, setGuardando] = useState(false);
   const [guardado, setGuardado] = useState(null); // "ok" o mensaje de error
+  const isAdmin = sesion?.user?.email === "admin@aci211.com";
   const [misDisenos, setMisDisenos] = useState([]);
   const [verMisDisenos, setVerMisDisenos] = useState(false);
+  /* Registro de usuarios (solo admin) */
+  const [regAbierto, setRegAbierto] = useState(false);
+  const [regEmail, setRegEmail] = useState("");
+  const [regPass, setRegPass] = useState("");
+  const [regPass2, setRegPass2] = useState("");
+  const [regError, setRegError] = useState(null);
+  const [regMsg, setRegMsg] = useState(null);
+  const [registrando, setRegistrando] = useState(false);
   const [cargandoLista, setCargandoLista] = useState(false);
 
   /* Al abrir la página recuperamos la sesión guardada en el navegador
@@ -219,14 +228,9 @@ export default function App() {
     setAuthError(null);
     setAuthMsg(null);
     const credenciales = { email: email.trim(), password: pass };
-    const { error } =
-      modoAuth === "login"
-        ? await supabase.auth.signInWithPassword(credenciales)
-        : await supabase.auth.signUp(credenciales);
+    const { error } = await supabase.auth.signInWithPassword(credenciales);
     if (error) {
       setAuthError(error.message);
-    } else if (modoAuth === "registro") {
-      setAuthMsg("Cuenta creada. Si te pide confirmar el correo, revisa tu bandeja; luego inicia sesión.");
     } else {
       setCuentaAbierta(false);
       setPass("");
@@ -238,6 +242,37 @@ export default function App() {
     setSesion(null);
     setMisDisenos([]);
     setVerMisDisenos(false);
+  }
+
+  /* Registra un nuevo usuario (solo el administrador puede hacerlo) */
+  async function registrarUsuario() {
+    setRegError(null);
+    setRegMsg(null);
+    const e = regEmail.trim();
+    if (!e || !e.includes("@")) { setRegError("Correo inválido."); return; }
+    if (regPass.length < 6) { setRegError("La contraseña debe tener al menos 6 caracteres."); return; }
+    if (regPass !== regPass2) { setRegError("Las contraseñas no coinciden."); return; }
+    setRegistrando(true);
+    try {
+      const r = await fetch("/api/registrar_usuario", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${sesion?.access_token ?? ""}`,
+        },
+        body: JSON.stringify({ email: e, password: regPass }),
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j.ok) {
+        setRegError(j.detalle || `Error ${r.status}`);
+      } else {
+        setRegMsg(`Usuario ${j.email} registrado correctamente. Ya puede iniciar sesión.`);
+        setRegEmail(""); setRegPass(""); setRegPass2("");
+      }
+    } catch {
+      setRegError("Sin conexión con el servidor.");
+    }
+    setRegistrando(false);
   }
 
   /* Guardamos la ficha actual en Supabase (botón "Guardar diseño") */
@@ -338,6 +373,18 @@ export default function App() {
                     {sesion.user.email}
                   </span>
                   <button className="nav-boton" onClick={salir}>Salir</button>
+                   {isAdmin && (
+                     <button className="nav-boton" onClick={() => {
+                       setRegAbierto(true);
+                       setRegError(null);
+                       setRegMsg(null);
+                       setRegEmail("");
+                       setRegPass("");
+                       setRegPass2("");
+                     }}>
+                       Registrar usuario
+                     </button>
+                   )}
                 </>
               ) : (
                 <button className="nav-boton" onClick={abrirCuenta}>
@@ -663,7 +710,7 @@ export default function App() {
         <div className="modal-fondo" onClick={() => setCuentaAbierta(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-cab">
-              <h3>{modoAuth === "login" ? "Iniciar sesión" : "Crear cuenta"}</h3>
+              <h3>Iniciar sesión</h3>
               <button className="modal-x" onClick={() => setCuentaAbierta(false)}>×</button>
             </div>
             <p className="modal-sub">
@@ -677,7 +724,7 @@ export default function App() {
             <label className="campo">
               <span>Contraseña</span>
               <input type="password" value={pass}
-                autoComplete={modoAuth === "login" ? "current-password" : "new-password"}
+                autoComplete="current-password"
                 onChange={(e) => setPass(e.target.value)} />
             </label>
             {authError && <p className="error" style={{ margin: 0 }}>⚠️ {authError}</p>}
@@ -685,13 +732,43 @@ export default function App() {
             <button className="boton modal-boton" onClick={entrar}>
               {modoAuth === "login" ? "Entrar" : "Registrarme"}
             </button>
-            <button className="enlace modal-cambio"
-              onClick={() => {
-                setModoAuth(modoAuth === "login" ? "registro" : "login");
-                setAuthError(null);
-                setAuthMsg(null);
-              }}>
-              {modoAuth === "login" ? "¿No tienes cuenta? Crear una" : "¿Ya tienes cuenta? Iniciar sesión"}
+            <p className="modal-sub" style={{ marginTop: 4 }}>
+              Las cuentas las crea únicamente el administrador.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* -------- modal de registro de usuario (solo admin) -------- */}
+      {regAbierto && isAdmin && (
+        <div className="modal-fondo" onClick={() => setRegAbierto(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-cab">
+              <h3>Registrar nuevo usuario</h3>
+              <button className="modal-x" onClick={() => setRegAbierto(false)}>×</button>
+            </div>
+            <p className="modal-sub">
+              Solo el administrador puede crear cuentas. El nuevo usuario podrá iniciar sesión con estos datos.
+            </p>
+            <label className="campo">
+              <span>Correo electrónico</span>
+              <input type="email" value={regEmail} autoComplete="off"
+                onChange={(e) => setRegEmail(e.target.value)} />
+            </label>
+            <label className="campo">
+              <span>Contraseña (mín. 6 caracteres)</span>
+              <input type="password" value={regPass} autoComplete="new-password"
+                onChange={(e) => setRegPass(e.target.value)} />
+            </label>
+            <label className="campo">
+              <span>Repetir contraseña</span>
+              <input type="password" value={regPass2} autoComplete="new-password"
+                onChange={(e) => setRegPass2(e.target.value)} />
+            </label>
+            {regError && <p className="error" style={{ margin: 0 }}>⚠️ {regError}</p>}
+            {regMsg && <p className="guardado-ok" style={{ margin: 0 }}>{regMsg}</p>}
+            <button className="boton modal-boton" onClick={registrarUsuario} disabled={registrando}>
+              {registrando ? "Registrando…" : "Registrar usuario"}
             </button>
           </div>
         </div>
