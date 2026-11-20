@@ -142,16 +142,30 @@ curl -X POST https://aci211-diseno-mezclas.onrender.com/api/disenar \
 |---|---|
 | `GET /api/health` | `200` · `{"ok":true,"existe":true}` |
 | `POST /api/disenar` con `fc=210` | `200` · `f'cr=294` · `a/c=0.56` |
-| Descarga del Excel | `200` · 22 KB |
+| Descarga del Excel (fallback Render) | `200` · 22 KB |
+| Descarga del Excel (Supabase Storage) | `200` · 22 KB · URL permanente |
+| Payload inválido (`fc=-5`) | `422` · detalle serializable |
 | Preflight CORS desde Vercel | `200` · `access-control-allow-origin` correcto |
 | Frontend servido por Vercel | bundle con `aci211-diseno-mezclas.onrender.com` |
 
-> Estas pruebas confirman que **Vercel (frontend)**, **Render (backend)** y **Supabase (datos)** están conectados en producción.
+> Estas pruebas confirman que **Vercel (frontend)**, **Render (backend)** y **Supabase (datos + Storage)** están conectados en producción.
+
+## Mejoras implementadas (sprints)
+
+| Sprint | Mejora | Detalle |
+|---|---|---|
+| 1 | Ping de calentamiento | `fetch` a `/api/health` al abrir la web; reduce el cold start de ~50 s |
+| 1 | `.gitignore` + `.env.example` | Evita filtrar claves y documenta variables |
+| 2 | Validación server-side (pydantic) | HTTP 422 con detalle limpio antes de ejecutar el cerebro |
+| 2 | Tests del parser y API (7 tests) | `_parsear_datos`, `_parsear_dosificacion`, health, diseño válido, payload inválido |
+| 3 | Persistencia en Supabase Storage | El Excel se sube al bucket `informes-aci211`; URL permanente, sobrevive reinicios |
+| 3 | Token en el fetch del frontend | Envía `Authorization` para guardar el informe bajo la carpeta del usuario |
+| — | README con arquitectura y servidores | Diagrama Mermaid, tabla de plataformas, verificación en producción |
 
 ## Notas y limitaciones
 
 - **Cold start:** el plan free de Render duerme tras 15 minutos sin tráfico; la primera petición puede tardar ~50 s.
-- **Persistencia de informes:** si `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` están configurados, el Excel se sube a **Supabase Storage** (`informes-aci211`) y se devuelve una URL permanente. Si no, se usa el endpoint efímero `/api/informes/{nombre}` (desarrollo local).
+- **Persistencia de informes:** ✅ activa. Si `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` están configurados, el Excel se sube a **Supabase Storage** (`informes-aci211`, bucket público) y se devuelve una URL permanente que no caduca ni se pierde al reiniciar el contenedor. Si no, se usa el endpoint efímero `/api/informes/{nombre}` (desarrollo local).
 - **Previews de Vercel:** `CORS_ORIGINS` solo permite el dominio de producción; las URLs de preview quedan bloqueadas.
 - La función `web/frontend/api/disenar.py` se conserva como respaldo serverless, pero producción usa Render vía `VITE_API_URL`.
 - **Regla de oro:** `diseno_mezclas_aci211.py` no se modifica.
