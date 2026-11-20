@@ -1,0 +1,128 @@
+
+==============================================================================
+              TECNOLOGIA DEL CONCRETO - DISENO DE MEZCLA ACI 211              
+==============================================================================
+  1) Diseno de mezcla ACI 211
+  2) Salir
+==============================================================================
+Seleccione una opcion: 
+==============================================================================
+                 INGRESO DE DATOS - DISENO DE MEZCLA ACI 211                  
+==============================================================================
+Los valores por defecto son los del ejemplo resuelto 'CORREGIDO'.
+Presione ENTER para aceptar cada valor por defecto.
+
+--- DATOS DE DISENO ---
+Descripcion del elemento/proyecto [losa de concreto]: Resistencia especificada f'c [kg/cm2] [210]: Responsable / docente [ING. FLAVIO CESAR TRUJILLO BAILON]: 
+Consistencia de la mezcla:
+     1  Seca (0" a 2")
+     2  Plástica (3" a 4")   <- por defecto
+     3  Fluida (>= 5")
+   Consistencia [2]: 
+Concreto con aire incorporado? (s/n) [n]: 
+--- CEMENTO ---
+Tipo de cemento [Andino Tipo V]: Peso especifico del cemento [3.12]: 
+--- AGREGADO FINO (ARENA) ---
+Peso unitario suelto seco [1580]: Peso unitario compactado seco [1710]: Peso especifico de masa [2.65]: % de humedad [3.5]: % de absorcion [1.2]: Modulo de fineza [2.7]: 
+--- AGREGADO GRUESO (PIEDRA) ---
+Peso unitario suelto seco [1550]: Peso unitario compactado seco [1660]: Peso especifico de masa [2.62]: % de humedad [0.4]: % de absorcion [1.0]: 
+Tamano maximo nominal (TMN) del agregado grueso:
+     1  3/8"
+     2  1/2"
+     3  3/4"   <- por defecto
+     4  1"
+     5  1 1/2"
+     6  2"
+     7  3"
+     8  6"
+   Elija el TMN [3 = 3/4"]: 
+--- DOSIFICACION PARA PROBETAS ---
+Diametro de probeta [cm] [15]: Altura de probeta [cm] [30]: Numero de probetas [3]: % de desperdicio [20]: 
+==============================================================================
+                         RESUMEN DE DATOS INGRESADOS                          
+==============================================================================
+                     DATO                             VALOR
+ Resistencia f'c (kg/cm2)                               210
+              Descripcion                  losa de concreto
+              Responsable ING. FLAVIO CESAR TRUJILLO BAILON
+             Consistencia                          Plástica
+     Con aire incorporado                                No
+               Exposicion                                 -
+                  Cemento                     Andino Tipo V
+             P.E. cemento                              3.12
+     ARENA - PUSS (kg/m3)                              1580
+     ARENA - PUCS (kg/m3)                              1710
+             ARENA - P.E.                              2.65
+      ARENA - Humedad (%)                               3.5
+    ARENA - Absorcion (%)                               1.2
+ ARENA - Modulo de fineza                               2.7
+    PIEDRA - PUSS (kg/m3)                              1550
+    PIEDRA - PUCS (kg/m3)                              1660
+            PIEDRA - P.E.                              2.62
+     PIEDRA - Humedad (%)                               0.4
+   PIEDRA - Absorcion (%)                               1.0
+             PIEDRA - TMN                              3/4"
+  PROBETA - Diametro (cm)                                15
+    PROBETA - Altura (cm)                                30
+         PROBETA - Numero                                 3
+PROBETA - Desperdicio (%)                                20
+
+Los datos son correctos? (s/n) [s]: 
+Calculando diseno de mezcla...
+
+==============================================================================
+                     RESUMEN DE LA DOSIFICACION - ACI 211                     
+==============================================================================
+  Proyecto      : losa de concreto
+  Responsable   : ING. FLAVIO CESAR TRUJILLO BAILON
+  Fecha         : 2026-11-20 15:29
+------------------------------------------------------------------------------
+  Resistencia f'c   : 210 kg/cm2
+  Resistencia f'cr  : 294 kg/cm2
+  Relacion a/c      : 0.56
+  Consistencia      : Plástica  (3" a 4")
+
+------------------------------------------------------------------------------
+  DOSIS POR m3 DE CONCRETO (peso humedo corregido)
+------------------------------------------------------------------------------
+    Cemento .............   349.13 kg/m3   (8.21 sacos)
+    Agregado fino .......   709.00 kg/m3
+    Agregado grueso .....   1050.0 kg/m3
+    Agua efectiva .......   195.51 lt/m3
+
+------------------------------------------------------------------------------
+  PROPORCION EN PESO  (cemento : fino : grueso)
+------------------------------------------------------------------------------
+    1 : 2.03 : 3.01      a/c = 0.56
+
+------------------------------------------------------------------------------
+  PROPORCION EN VOLUMEN POR SACO DE CEMENTO (42.5 kg)
+------------------------------------------------------------------------------
+    Agregado fino ....... 0.055 m3
+    Agregado grueso ..... 0.083 m3
+    Agua ................ 23.8 lt
+
+------------------------------------------------------------------------------
+  CANTIDADES PARA EL VOLUMEN CALCULADO (V total = 0.019 m3)
+------------------------------------------------------------------------------
+    Cemento .............    6.668 kg   (0.157 sacos)
+    Agregado fino .......   13.542 kg
+    Agregado grueso .....   20.055 kg
+    Agua efectiva .......    3.734 lt
+==============================================================================
+
+Desea hacer el informe de la dosificacion?
+     1  Si, generar el informe   <- por defecto
+     2  No
+  Opcion [1]: 
+  [OK] Informe guardado en:
+       C:\Users\lenovo\Desktop\resistenciaConcreto\diseno_aci211_20261120_152950.xlsx
+
+Presione ENTER para continuar...
+==============================================================================
+              TECNOLOGIA DEL CONCRETO - DISENO DE MEZCLA ACI 211              
+==============================================================================
+  1) Diseno de mezcla ACI 211
+  2) Salir
+==============================================================================
+Seleccione una opcion: 
