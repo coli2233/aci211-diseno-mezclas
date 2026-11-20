@@ -9,15 +9,25 @@ Calculadora de dosificación de concreto (f'c 100–1000 kg/cm²) por el método
 El cálculo lo realiza `diseno_mezclas_aci211.py`, un programa de consola interactivo que
 genera el informe técnico en Excel con openpyxl. **Ese archivo no se modifica nunca.**
 
-## Demo en producción
+## Servidores en producción
 
-| Servicio | URL |
+| Componente | Servidor | Qué corre allí | URL |
+|---|---|---|---|
+| **Frontend** | **Vercel** | React + Vite compilado (`web/frontend`) | https://aci211-diseno-mezclas.vercel.app |
+| **Backend** | **Render** | FastAPI + `diseno_mezclas_aci211.py` en Docker (plan free, Virginia) | https://aci211-diseno-mezclas.onrender.com |
+| **Base de datos** | **Supabase** | Postgres, Auth y políticas RLS (tabla `disenos`) | https://uiudnidegokdnnisjpho.supabase.co |
+
+- El **frontend** se sirve únicamente desde **Vercel**.
+- El **backend** se ejecuta únicamente en **Render** (la función serverless de Vercel queda solo como respaldo).
+- **Supabase** no ejecuta Python: únicamente autentica usuarios y guarda los diseños.
+
+### Enlaces útiles
+
+| Recurso | URL |
 |---|---|
-| Aplicación web (Vercel) | https://aci211-diseno-mezclas.vercel.app |
-| API (Render) | https://aci211-diseno-mezclas.onrender.com |
 | Salud de la API | https://aci211-diseno-mezclas.onrender.com/api/health |
 | Documentación FastAPI | https://aci211-diseno-mezclas.onrender.com/docs |
-| Base de datos (Supabase) | https://uiudnidegokdnnisjpho.supabase.co |
+| Repositorio | https://github.com/coli2233/aci211-diseno-mezclas |
 
 ## Arquitectura
 
