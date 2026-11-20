@@ -193,6 +193,7 @@ export default function App() {
   const [guardado, setGuardado] = useState(null); // "ok" o mensaje de error
   const [misDisenos, setMisDisenos] = useState([]);
   const [verMisDisenos, setVerMisDisenos] = useState(false);
+  const [errBorrar, setErrBorrar] = useState(null);
   const [cargandoLista, setCargandoLista] = useState(false);
 
   /* Al abrir la página recuperamos la sesión guardada en el navegador
@@ -273,6 +274,7 @@ export default function App() {
   }
 
   function abrirMisDisenos() {
+    setErrBorrar(null);
     setVerMisDisenos(true);
     cargarMisDisenos();
   }
@@ -284,11 +286,16 @@ export default function App() {
   }
 
   async function borrarDiseno(id) {
+    setErrBorrar(null);
     try {
       await eliminarDiseno(id);
-      setMisDisenos((lista) => lista.filter((d) => d.id !== id));
+      // Re-sincronizamos con la BD para confirmar el borrado real
+      const lista = await listarDisenos();
+      setMisDisenos(lista);
     } catch (e) {
-      setGuardado(e.message || "no se pudo eliminar");
+      setErrBorrar(e.message || "no se pudo eliminar");
+      // Re-sincronizamos por si el borrado falló
+      try { setMisDisenos(await listarDisenos()); } catch { /* noop */ }
     }
   }
 
@@ -717,6 +724,7 @@ export default function App() {
               <h3>Mis diseños</h3>
               <button className="modal-x" onClick={() => setVerMisDisenos(false)}>×</button>
             </div>
+            {errBorrar && <p className="error" style={{ margin: "0 0 10px" }}>⚠️ {errBorrar}</p>}
             {cargandoLista ? (
               <p className="modal-sub">Cargando…</p>
             ) : misDisenos.length === 0 ? (

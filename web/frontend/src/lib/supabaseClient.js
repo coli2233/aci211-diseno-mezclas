@@ -86,10 +86,25 @@ export async function listarDisenos() {
   return data ?? [];
 }
 
-/* Borramos un diseño propio (RLS "dueno_borra" impide tocar ajenos) */
+/* Borramos un diseño propio (RLS "dueno_borra" impide tocar ajenos).
+   Pedimos .select() para saber cuántas filas se borraron: si RLS
+   bloqueó la operación (sesión caducada o fila ajena), count=0 y
+   lanzamos error en vez de "parecer" que se borró. */
 export async function eliminarDiseno(id) {
   if (!supabase) throw new Error("Supabase no está configurado (revisa VITE_SUPABASE_*).");
 
-  const { error } = await supabase.from("disenos").delete().eq("id", id);
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error("Inicia sesión para eliminar diseños.");
+
+  const { data, error } = await supabase
+    .from("disenos")
+    .delete()
+    .eq("id", id)
+    .select("id");
+
   if (error) throw error;
+  if (!data || data.length === 0) {
+    throw new Error("No se pudo eliminar: la fila no existe o no tienes permiso (sesión caducada).");
+  }
+  return data;
 }
