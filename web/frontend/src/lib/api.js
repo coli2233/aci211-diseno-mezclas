@@ -48,6 +48,9 @@ export async function disenar(datos) {
       } else if (j && j.detail) {
         detalle = typeof j.detail === "string" ? j.detail : JSON.stringify(j.detail);
       }
+      if (j && j.stderr && j.stderr.trim()) {
+        detalle = detalle + " | " + j.stderr.trim().slice(0, 200);
+      }
     } catch { /* cuerpo no JSON */ }
     const e = new Error(detalle);
     e.status = r.status;

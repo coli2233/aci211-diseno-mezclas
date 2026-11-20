@@ -62,6 +62,20 @@ class _Agregado(BaseModel):
             raise ValueError("debe ser mayor que 0")
         return v
 
+    @field_validator("mf", mode="before")
+    @classmethod
+    def _mf_vacio(cls, v):
+        if v == "" or v is None:
+            return None
+        return v
+
+    @field_validator("mf", mode="after")
+    @classmethod
+    def _mf_min(cls, v):
+        if v is not None and v < 1:
+            raise ValueError("debe ser mayor que 0 (módulo de fineza)")
+        return v
+
     @field_validator("humedad", "absorcion", mode="after")
     @classmethod
     def _min_cero(cls, v):
@@ -142,6 +156,16 @@ class DisenoRequest(BaseModel):
     def _consist(cls, v):
         if v == "" or v is None:
             return "2"
+        v = str(v).strip()
+        if v not in ("1", "2", "3"):
+            raise ValueError("debe ser 1, 2 o 3")
+        return v
+
+    @field_validator("exposicion", mode="before")
+    @classmethod
+    def _expo(cls, v):
+        if v == "" or v is None:
+            return "1"
         v = str(v).strip()
         if v not in ("1", "2", "3"):
             raise ValueError("debe ser 1, 2 o 3")
@@ -459,7 +483,10 @@ def disenar(d: dict, request: Request):
 
     salida = proc.stdout
     if proc.returncode != 0 or "RESUMEN DE LA DOSIFICACION" not in salida:
-        return JSONResponse({"ok": False, "detalle": "El script no completo el diseno.",
+        detalle = "El script no completo el diseno."
+        if proc.stderr and proc.stderr.strip():
+            detalle = detalle + " | stderr: " + proc.stderr.strip()[:300]
+        return JSONResponse({"ok": False, "detalle": detalle,
                              "salida": salida, "stderr": proc.stderr}, status_code=400)
 
     despues = set(str(p) for p in
