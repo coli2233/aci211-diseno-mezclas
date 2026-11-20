@@ -1,0 +1,31 @@
+# Secretos y credenciales (NUNCA al repositorio)
+.env
+.env.*
+!.env.example
+*apikey*
+*.key
+*.pem
+rendepapiley.txt
+render-apikey.txt
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Node / Vite
+node_modules/
+dist/
+.vite/
+*.local
+
+# Generados por el cerebro
+*.xlsx
+*.xlsx.tmp
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini

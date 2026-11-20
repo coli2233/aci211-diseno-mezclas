@@ -204,6 +204,14 @@ export default function App() {
     return () => sub.subscription.unsubscribe();
   }, []);
 
+  /* Calentamos el backend (Render) al abrir la página para reducir el
+     cold start (~50 s) cuando el usuario pulse "Calcular dosificación". */
+  useEffect(() => {
+    const base = import.meta.env.VITE_API_URL;
+    if (!base) return; // en Vercel serverless no hace falta calentar
+    fetch(base + "/api/health").catch(() => {});
+  }, []);
+
   function abrirCuenta() {
     /* Cada vez que abrimos el panel empezamos en "Iniciar sesión":
        si el usuario había cambiado a "Crear cuenta" y cerró la ventana,
