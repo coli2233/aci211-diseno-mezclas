@@ -29,9 +29,75 @@ import sys
 import threading
 
 from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, ConfigDict, ValidationError, field_validator
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+
+# ---------------------------------------------------------------------------
+# Validación de entrada (pydantic): rechazamos payloads malos con HTTP 422
+# antes de gastar CPU del contenedor ejecutando el cerebro.
+# ---------------------------------------------------------------------------
+class _Agregado(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    puss: float | None = None
+    pucs: float | None = None
+    pe: float | None = None
+    humedad: float | None = None
+    absorcion: float | None = None
+    mf: float | None = None
+
+
+class _Probeta(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    diametro: float | None = None
+    altura: float | None = None
+    numero: int | None = None
+    desperdicio: float | None = None
+
+
+class DisenoRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    descripcion: str = ""
+    fc: float | None = None
+    responsable: str = ""
+    consistencia: str = "2"
+    aire: bool = False
+    exposicion: str = "1"
+    tipo_cemento: str = ""
+    pe_cemento: float | None = None
+    arena: _Agregado = _Agregado()
+    piedra: _Agregado = _Agregado()
+    tmn: str = "3"
+    probeta: _Probeta = _Probeta()
+    confirmar: bool = True
+    informe: bool = True
+
+    @field_validator("fc", "pe_cemento")
+    @classmethod
+    def _positivo(cls, v):
+        if v is not None and v <= 0:
+            raise ValueError("debe ser mayor que 0")
+        return v
+
+    @field_validator("arena", "piedra", mode="before")
+    @classmethod
+    def _agregado_dict(cls, v):
+        if v is None:
+            return _Agregado()
+        if isinstance(v, dict):
+            return v
+        raise ValueError("debe ser un objeto")
+
+    @field_validator("probeta", mode="before")
+    @classmethod
+    def _probeta_dict(cls, v):
+        if v is None:
+            return _Probeta()
+        if isinstance(v, dict):
+            return v
+        raise ValueError("debe ser un objeto")
+
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 CARPETA_PROYECTO = os.path.dirname(os.path.dirname(BASE))
@@ -188,6 +254,15 @@ def salud():
 
 @app.post("/api/disenar")
 def disenar(d: dict):
+    # Validamos la entrada antes de gastar CPU del contenedor.
+    try:
+        DisenoRequest.model_validate(d or {})
+    except ValidationError as e:
+        # e.errors() contiene objetos no serializables (ValueError en "ctx");
+        # armamos un detalle limpio y serializable.
+        detalle = [{"loc": err.get("loc"), "msg": err.get("msg"), "type": err.get("type")} for err in e.errors()]
+        raise HTTPException(status_code=422, detail=detalle)
+
     # Ruta principal: ejecutamos el cerebro con las respuestas del
     # formulario, detectamos el Excel nuevo que dejo y parseamos su salida.
     if not os.path.exists(PROGRAMA):
