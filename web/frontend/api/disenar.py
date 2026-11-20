@@ -79,9 +79,10 @@ def _construir_entrada(d):
         _limpiar(probeta.get("numero")),                      # numero probetas
         _limpiar(probeta.get("desperdicio")),                 # % desperdicio
     ]
-    lineas.append("s" if d.get("confirmar", True) else "n")   # datos correctos?
-    if d.get("confirmar", True):
-        lineas.append("1" if d.get("informe", True) else "2") # informe?
+    # Desde la web el usuario ya reviso los datos al pulsar "Calcular", asi
+    # que siempre confirmamos.
+    lineas.append("s")                                         # datos correctos?
+    lineas.append("1" if d.get("informe", True) else "2")       # informe?
     lineas.append("")                                          # pausa
     lineas.append("2")                                         # salir del menu
     return "\n".join(lineas) + "\n"
