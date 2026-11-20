@@ -307,9 +307,10 @@ def _subir_informe_supabase(nombre, ruta_archivo, user_id):
     key = _service_key()
     if not url or not key or not os.path.exists(ruta_archivo):
         return None
-    carpeta = user_id or "anon"
-    path = f"{carpeta}/{nombre}"
+    # Guardamos en la raiz del bucket (nombre unico por timestamp) para
+    # evitar problemas de parsing de claves con carpetas anidadas.
     bucket = "informes-aci211"
+    path = nombre
     try:
         with open(ruta_archivo, "rb") as f:
             data = f.read()
@@ -323,7 +324,19 @@ def _subir_informe_supabase(nombre, ruta_archivo, user_id):
         req.add_header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
         req.add_header("x-upsert", "true")
         with urllib.request.urlopen(req, timeout=60) as r:
-            r.read()
+            raw = r.read().decode("utf-8", "replace")
+            # Usamos la clave devuelta por Supabase para construir la URL
+            # (evita desajustes entre la ruta enviada y la almacenada).
+            try:
+                info = json.loads(raw) if raw else {}
+                key_ret = info.get("Key") or info.get("key") or info.get("path") or path
+                # Supabase devuelve "bucket/path"; nos quedamos con el path
+                if "/" in key_ret and key_ret.split("/", 1)[0] == bucket:
+                    key_ret = key_ret.split("/", 1)[1]
+                if key_ret:
+                    path = key_ret
+            except (json.JSONDecodeError, AttributeError):
+                pass
         # El bucket es publico: la URL no caduca.
         return f"{url}/storage/v1/object/public/{bucket}/{path}"
     except Exception:
