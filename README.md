@@ -5,6 +5,8 @@
 ![Base de datos: Supabase](https://img.shields.io/badge/database-Supabase-3ECF8E)
 ![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB)
 
+> **Servidores en producción:** **Frontend → Vercel** · **Backend → Render** · **Base de datos → Supabase**
+
 Calculadora de dosificación de concreto (f'c 100–1000 kg/cm²) por el método **ACI 211**.
 El cálculo lo realiza `diseno_mezclas_aci211.py`, un programa de consola interactivo que
 genera el informe técnico en Excel con openpyxl. **Ese archivo no se modifica nunca.**
