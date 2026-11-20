@@ -26,6 +26,9 @@ REM
 REM  En local NO usamos Vercel/Render/Supabase: todo corre en esta PC
 REM  para desarrollo y pruebas. Las variables VITE_API_URL y
 REM  CORS_ORIGINS quedan vacias/permisivas.
+REM
+REM  Produccion: https://aci211-diseno-mezclas.vercel.app (Vercel)
+REM              https://aci211-diseno-mezclas.onrender.com (Render)
 REM ============================================================
 title API ACI 211 + Web React
 cd /d "%~dp0backend"
