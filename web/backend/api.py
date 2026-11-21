@@ -31,6 +31,9 @@ import urllib.request
 
 from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel, ConfigDict, ValidationError, field_validator
+from slowapi import Limiter
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -206,6 +209,18 @@ PROGRAMA = os.path.join(CARPETA_PROYECTO, "diseno_mezclas_aci211.py")
 DIST = os.path.join(BASE, "..", "frontend", "dist")
 
 app = FastAPI(title="API ACI 211", version="1.1")
+
+# Rate limiting: protege la CPU gratuita de Render de abuso o bucles.
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+
+
+@app.exception_handler(RateLimitExceeded)
+def _rate_limit_handler(request: Request, exc: RateLimitExceeded):
+    return JSONResponse(
+        {"ok": False, "detalle": "Demasiadas peticiones. Espera un momento e intenta de nuevo."},
+        status_code=429,
+    )
 
 # CORS: en produccion, lista separada por comas en la variable CORS_ORIGINS
 # (ej. CORS_ORIGINS=https://aci211.vercel.app). Si no se define, se permite
@@ -446,6 +461,7 @@ def _subir_informe_supabase(nombre, ruta_archivo, user_id):
 
 
 @app.post("/api/disenar")
+@limiter.limit("10/minute")
 def disenar(d: dict, request: Request):
     # Validamos la entrada antes de gastar CPU del contenedor.
     try:

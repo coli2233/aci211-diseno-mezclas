@@ -319,6 +319,8 @@ export default function App() {
     } catch (e) {
       if (e && e.status === 422) {
         setError("Datos inválidos: " + (e.message || "revisa los campos del formulario."));
+      } else if (e && e.status === 429) {
+        setError("Demasiadas peticiones. Espera un momento e intenta de nuevo.");
       } else {
         setError("No se pudo contactar la API" +
           (e && e.message ? " · " + e.message : "") +
